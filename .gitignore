@@ -1,0 +1,11 @@
+# Common editor backup files
+*.swp
+*.swo
+*.bak
+
+# Build outputs and intermediate build products
+*.o
+*.d
+*.elf
+*.bin
+*.dfu
