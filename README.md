@@ -43,7 +43,7 @@ A few USB descriptor fields are likely to be candidates that you may want to cha
 Makefile Variable Name | Default Value
 -----------------------|--------------
 `USB_DESCRIPTORS_VENDOR_ID` | 0x1209 ([pid.codes vendor ID](https://pid.codes/1209/))
-`USB_DESCRIPTORS_PRODUCT_ID` | 0x000A (arbitrary [pid.codes test product ID](https://pid.codes/1209/000A/))
+`USB_DESCRIPTORS_PRODUCT_ID` | 0xfa70 ([Relacon product ID from pid.codes](https://pid.codes/1209/FA70/))
 `USB_DESCRIPTORS_STRING_SERIAL_NUM` | "A123456"
 
 To override any of these, simply assign one or more of them on the make command line when building the firmware; for example:
