@@ -49,6 +49,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INPUT_PORT_A_MASK   0x0f
 #define INPUT_PORT_B_MASK   0xf0
 
+#define DEC_DIGITS_1_BIT    1
+#define DEC_DIGITS_4_BIT    2
+#define DEC_DIGITS_8_BIT    3
+#define DEC_DIGITS_16_BIT   5
+
 /** Buffer for storing the response to the latest command */
 static uint8_t ResponseBuf[MAX_RSP_BUF_SIZE];
 
@@ -165,10 +170,10 @@ static uint8_t GetInputPortValue(char inputPortChar)
 /**
  * Writes the specified value into the response buffer (and updates the
  * response buffer length accordingly) by formatting the value as a binary
- * string. The string will contain exactly numDigits binary digits, even if
+ * string. The string will contain exactly @p numDigits binary digits, even if
  * the value could be represented with fewer digits or requires more digits.
  *
- * @pre The reponse buffer has been zeroed out prior to calling
+ * @pre The response buffer has been zeroed out prior to calling
  * @post The response buffer will be populated with the string value and the
  *       response buffer length updated accordingly
  *
@@ -180,42 +185,31 @@ static void WriteResponseBinary(uint8_t value, uint8_t numDigits)
     for (unsigned i = 0; i < numDigits; i++)
     {
         ResponseBuf[i] = (value & (1 << (numDigits - i - 1))) ? '1' : '0';
-        ResponseBufLen++;
     }
+    
+    ResponseBufLen = numDigits;
 }
 
 /**
  * Writes the specified value into the response buffer (and updates the
  * response buffer length accordingly) by formatting the value as a decimal
- * string. The string does *NOT* contain leading zeros.
+ * string. The string will contain exactly @p numDigits decimal digits, even if
+ * the value could be represented with fewer digits or requires more digits.
  *
- * @pre The reponse buffer has been zeroed out prior to calling
+ * @pre The response buffer has been zeroed out prior to calling
  * @post The response buffer will be populated with the string value and the
  *       response buffer length updated accordingly
  *
  * @param[in] value The numeric value to write to the response buffer
+ * @param[in] numDigits The number of decimal digits to write into the response
  */
-static void WriteResponseDecimal(uint16_t value)
+static void WriteResponseDecimal(uint16_t value, uint8_t numDigits)
 {
-    unsigned numDigits = 0;
-
-    // Compute each of the decimal digits starting from the least significant
-    // and moving to the most significant. This will populate the buffer in
-    // the opposite order that we want, but we'll reverse them at the end.
-    do
+    for (int i = numDigits - 1; i >= 0; i--)
     {
         unsigned digit = value % 10;
         value /= 10;
-        ResponseBuf[numDigits++] = '0' + digit;
-    }
-    while (value > 0);
-
-    // Reverse the order of the digits by swapping them about the center digit
-    for (unsigned i = 0; i < numDigits / 2; i++)
-    {
-        char temp = ResponseBuf[i];
-        ResponseBuf[i] = ResponseBuf[numDigits - i - 1];
-        ResponseBuf[numDigits - i - 1] = temp;
+        ResponseBuf[i] = '0' + digit;
     }
 
     ResponseBufLen = numDigits;
@@ -258,7 +252,7 @@ static bool HandlerReadSinglePort(const char *args)
                 // Check that the conversion was valid and in range
                 if (*endptr == '\0' && line < INPUT_PORT_NUM_PINS)
                 {
-                    WriteResponseDecimal((portValue & (1 << line)) != 0);
+                    WriteResponseBinary((portValue & (1 << line)) != 0, 1);
                     success = true;
                 }
                 else
@@ -305,7 +299,7 @@ static bool HandlerReadSinglePortDecimal(const char *args)
         uint8_t portValue = GetInputPortValue(args[0]);
         if (portValue != 0xff)
         {
-            WriteResponseDecimal(portValue);
+            WriteResponseDecimal(portValue, DEC_DIGITS_4_BIT);
             success = true;
         }
     }
@@ -337,7 +331,7 @@ static bool HandlerReadCombinedPortsDecimal(const char *args)
     // There should be no character arguments to this command
     if (strlen(args) == 0)
     {
-        WriteResponseDecimal(BoardReadDigitalInputs());
+        WriteResponseDecimal(BoardReadDigitalInputs(), DEC_DIGITS_8_BIT);
         success = true;
     }
 
@@ -456,7 +450,8 @@ static bool HandlerWriteRelayPort(const char *args)
 static bool HandlerReadSingleRelay(const char *args)
 {
     BoardDebugPrint("Hit %s\r\n", __func__);
-        bool success = false;
+
+    bool success = false;
 
     // There should be exactly one character argument to this command
     if (strlen(args) == 1)
@@ -467,7 +462,7 @@ static bool HandlerReadSingleRelay(const char *args)
         if (*endptr == '\0' && relay < NUM_RELAYS)
         {
             uint8_t relayPort = BoardReadRelays();
-            WriteResponseDecimal((relayPort & (1 << relay)) != 0);
+            WriteResponseBinary((relayPort & (1 << relay)) != 0, 1);
 
             success = true;
         }
@@ -488,12 +483,14 @@ static bool HandlerReadSingleRelay(const char *args)
  */
 static bool HandlerReadRelayPortDecimal(const char *args)
 {
-    BoardDebugPrint("Hit %s\r\n", __func__);    bool success = false;
+    BoardDebugPrint("Hit %s\r\n", __func__);
+
+    bool success = false;
 
     // There should be no arguments to this command
     if (strlen(args) == 0)
     {
-        WriteResponseDecimal(BoardReadRelays());
+        WriteResponseDecimal(BoardReadRelays(), DEC_DIGITS_8_BIT);
         success = true;
     }
 
@@ -524,7 +521,7 @@ static bool HandlerReadEventCounter(const char *args)
         if (*endptr == '\0' && index < EVENT_COUNTER_NUM_COUNTERS)
         {
             uint16_t count = EventCounterRead(index, false);
-            WriteResponseDecimal(count);
+            WriteResponseDecimal(count, DEC_DIGITS_16_BIT);
             success = true;
         }
     }
@@ -557,7 +554,7 @@ static bool HandlerReadAndResetEventCounter(const char *args)
         if (*endptr == '\0' && index < EVENT_COUNTER_NUM_COUNTERS)
         {
             uint16_t count = EventCounterRead(index, true);
-            WriteResponseDecimal(count);
+            WriteResponseDecimal(count, DEC_DIGITS_16_BIT);
             success = true;
         }
     }
@@ -591,7 +588,7 @@ static bool HandlerDebounceSetting(const char *args)
         {
             if (DEBOUNCE_TIMES_US[i] == debounceTime)
             {
-                WriteResponseDecimal(i);
+                WriteResponseDecimal(i, 1);
                 success = true;
                 break;
             }
@@ -639,7 +636,7 @@ static bool HandlerWatchdogSetting(const char *args)
         {
             if (WATCHDOG_TIMES_US[i] == watchdogTimeout)
             {
-                WriteResponseDecimal(i);
+                WriteResponseDecimal(i, 1);
                 success = true;
                 break;
             }
