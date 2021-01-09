@@ -74,23 +74,73 @@ const uint8_t * tud_descriptor_device_cb(void)
 static const uint8_t HID_REPORT_DESCRIPTOR[] =
 {
     HID_USAGE_PAGE_N ( HID_USAGE_PAGE_VENDOR, 2   ),
+
+    // Collection for command/response reports (report ID 1)
     HID_USAGE        ( 0x01                       ),
     HID_COLLECTION   ( HID_COLLECTION_APPLICATION ),
 
         // Input report
+        HID_USAGE         ( 0xa6                                   ),
         HID_REPORT_ID     ( 1                                      )
-        HID_USAGE         ( 0x02                                   ),
+        HID_USAGE         ( 0xa7                                   ),
         HID_LOGICAL_MIN   ( 0x00                                   ),
-        HID_LOGICAL_MAX_N ( 0xff, 2                                ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
         HID_REPORT_SIZE   ( 8                                      ),
         HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
         HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
 
         // Output report
-        HID_REPORT_ID     ( 1                                      )
-        HID_USAGE         ( 0x03                                   ),
+        HID_USAGE         ( 0xa9                                   ),
         HID_LOGICAL_MIN   ( 0x00                                   ),
-        HID_LOGICAL_MAX_N ( 0xff, 2                                ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
+        HID_REPORT_SIZE   ( 8                                      ),
+        HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
+        HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
+
+    HID_COLLECTION_END,
+
+    // Collection for RS232 reports (report ID 2; unused on this device)
+    HID_USAGE        ( 0x02                       ),
+    HID_COLLECTION   ( HID_COLLECTION_APPLICATION ),
+
+        // Input report
+        HID_USAGE         ( 0xa5                                   ),
+        HID_REPORT_ID     ( 2                                      )
+        HID_USAGE         ( 0xaa                                   ),
+        HID_LOGICAL_MIN   ( 0x00                                   ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
+        HID_REPORT_SIZE   ( 8                                      ),
+        HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
+        HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
+
+        // Output report
+        HID_USAGE         ( 0xab                                   ),
+        HID_LOGICAL_MIN   ( 0x00                                   ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
+        HID_REPORT_SIZE   ( 8                                      ),
+        HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
+        HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
+
+    HID_COLLECTION_END,
+    
+    // Collection for "streaming" reports (report ID 3; unused on this device)
+    HID_USAGE        ( 0x03                       ),
+    HID_COLLECTION   ( HID_COLLECTION_APPLICATION ),
+
+        // Input report
+        HID_USAGE         ( 0xae                                   ),
+        HID_REPORT_ID     ( 3                                      )
+        HID_USAGE         ( 0xac                                   ),
+        HID_LOGICAL_MIN   ( 0x00                                   ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
+        HID_REPORT_SIZE   ( 8                                      ),
+        HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
+        HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
+
+        // Output report
+        HID_USAGE         ( 0xad                                   ),
+        HID_LOGICAL_MIN   ( 0x00                                   ),
+        HID_LOGICAL_MAX   ( 0x7f                                   ),
         HID_REPORT_SIZE   ( 8                                      ),
         HID_REPORT_COUNT  ( CFG_TUD_HID_EP_BUFSIZE - 1             ),
         HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),
