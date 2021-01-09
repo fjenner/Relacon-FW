@@ -199,7 +199,7 @@ const uint16_t * tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         return NULL;
 
     // Bail out if requested language is not supported
-    if (langid != LANGID_ENGLISH)
+    if (index != 0 && langid != LANGID_ENGLISH)
         return NULL;
 
     uint8_t bDescriptorType = TUSB_DESC_STRING;
