@@ -58,6 +58,22 @@ uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
 }
 
 /**
+ * TinyUSB callback invoked when receiving a SET_IDLE control request. If not
+ * overridden, the stack will simply do nothing but still acknowledge the
+ * request. The request can instead respond with a STALL if the function is
+ * overridden and returns false.
+ *
+ * @param[in] idle_rate The duration, in 4ms increments, between reports
+ *
+ * @return Returns true if the request is honored or false to STALL the request
+ */
+bool tud_hid_set_idle_cb(uint8_t idle_rate)
+{
+    // Behave like the ADU218 and STALL any SET_IDLE requests
+    return false;
+}
+
+/**
  * TinyUSB callback invoked when receiving a SET_REPORT request or a report on
  * the HID OUT endpoint. Oddly, in the latter case (which is the case that the
  * host software actually uses), TinyUSB hard-codes the report_id parameter as
