@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define STRING_MANUFACTURER "Frank Jenner"
 #define STRING_PRODUCT      "Relacon Relay Controller"
+#define STRING_CONFIG_1     "Relacon Standard Configuration"
+#define STRING_INTERFACE_0  "Relacon Relay Interface"
 
 #define LANGID_ENGLISH      0x0409
 
@@ -172,16 +174,16 @@ static const uint8_t CONFIGURATION_DESCRIPTOR[] =
     TUD_CONFIG_DESCRIPTOR(
         1,                  // Configuration index
         1,                  // Number of interfaces in this configuration
-        0,                  // String descriptor index for configuration (none)
+        4,                  // String descriptor index for configuration
         CONFIG_TOTAL_LEN,   // Total length of this descriptor and all subordinate descriptors
-        0,                  // Attributes (neither self-powered nor supporting remote wakeup)
-        100                 // Maximum power in mA
+        TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, // Attributes (bus-powered, supporting remote wakeup)
+        200                 // Maximum power in mA
     ),
 
     // Subordinate interface and endpoint descriptors for HID interface
     TUD_HID_INOUT_DESCRIPTOR(
         0,                  // Interface number of HID interface
-        0,                  // String descriptor index for interface (none)
+        5,                  // String descriptor index for interface
         HID_PROTOCOL_NONE,  // Protocol (HID)
         sizeof(HID_REPORT_DESCRIPTOR),
         0x01,               // HID interrupt OUT endpoint address
@@ -220,6 +222,8 @@ static const char *STRING_DESCRIPTORS[] =
     STRING_MANUFACTURER,
     STRING_PRODUCT,
     USB_DESCRIPTORS_STRING_SERIAL_NUM,
+    STRING_CONFIG_1,
+    STRING_INTERFACE_0
 };
 
 /**
