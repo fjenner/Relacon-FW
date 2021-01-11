@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boards/Board.h"
 #include "AduProtocol.h"
 
-/** The normal ADU commands use HID report ID 1 */
-#define REPORT_ID_ADU 1
+/** The normal ADU commands/responses use HID report ID 1 */
+#define REPORT_ID_ADU_CMD_RSP   1
 
 /**
  * TinyUSB callback invoked when receiving a GET_REPORT control request. The
@@ -51,10 +51,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen)
 {
-    // Not implemented. The host software always uses EP1 IN to retrieve report
-    // data, so this function does nothing.
+    uint16_t ret = 0;
 
-    return 0;
+    if (report_type == HID_REPORT_TYPE_INPUT &&
+        report_id == REPORT_ID_ADU_CMD_RSP)
+    {
+        // Get the response to the last command
+        ret = AduProtocolGetResponse(buffer, sizeof(reqlen));
+
+        // Zero-pad the remainder of the report if not filled completely
+        if (ret < reqlen)
+        {
+            memset(&buffer[ret], 0, reqlen - ret);
+            ret = reqlen;
+        }
+    }
+
+    return ret;
 }
 
 /**
@@ -75,10 +88,9 @@ bool tud_hid_set_idle_cb(uint8_t idle_rate)
 
 /**
  * TinyUSB callback invoked when receiving a SET_REPORT request or a report on
- * the HID OUT endpoint. Oddly, in the latter case (which is the case that the
- * host software actually uses), TinyUSB hard-codes the report_id parameter as
- * zero, so the report ID must be extracted from the first byte of the report
- * payload.
+ * the HID OUT endpoint. In the latter case, the @p report_type will be passed
+ * in as HID_REPORT_TYPE_INVALID (and the @p report_id as zero), and the report
+ * ID must be extracted from the first byte of the report payload.
  *
  * @param[in] report_id The report ID to set (only valid on a SET_REPORT
  *                      request on endpoint 0; otherwise, for OUT transactions
@@ -92,15 +104,26 @@ void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type, uin
 {
     BoardDebugPrint("tud_hid_set_report_cb(report_id=%u, report_type=%u, buffer[0]=0x%02x, bufsize=%u)\r\n", (unsigned)report_id, (unsigned)report_type, buffer[0], bufsize);
 
-    if (buffer[0] == REPORT_ID_ADU)
+    // If this was really an OUT transfer on the interrupt endpoint, extract
+    // the report ID and adjust the interpretation of the other parameters
+    if (report_type == HID_REPORT_TYPE_INVALID)
     {
-        // Skip over the report ID byte and pass the rest of the payload to the
-        // ADU command processor
-        bool success = AduProtocolProcessCommand(&buffer[1], bufsize - 1);
+        report_id = buffer[0];
+        report_type = HID_REPORT_TYPE_OUTPUT;
+        buffer = &buffer[1];
+        bufsize--;
+    }
+
+    // We only handle output report ID one
+    if (report_type == HID_REPORT_TYPE_OUTPUT &&
+        report_id == REPORT_ID_ADU_CMD_RSP)
+    {
+        // Send the report payload to the ADU command processor
+        bool success = AduProtocolProcessCommand(buffer, bufsize);
 
         if (!success)
         {
-            BoardDebugPrint("%s: Failed processing command %s\r\n", __func__, &buffer[1]);
+            BoardDebugPrint("%s: Failed processing command %s\r\n", __func__, buffer);
         }
         else
         {
@@ -113,7 +136,7 @@ void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type, uin
                 BoardDebugPrint("%s: Sending response with length %d\r\n", __func__, rspLen);
                 // Pad the remainder of the report with zeros
                 memset(&rspBuf[rspLen], 0, sizeof(rspBuf) - rspLen);
-                tud_hid_report(REPORT_ID_ADU, rspBuf, sizeof(rspBuf));
+                tud_hid_report(REPORT_ID_ADU_CMD_RSP, rspBuf, sizeof(rspBuf));
             }
         }
     }
