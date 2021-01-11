@@ -44,7 +44,7 @@ Makefile Variable Name | Default Value
 -----------------------|--------------
 `USB_DESCRIPTORS_VENDOR_ID` | 0x1209 ([pid.codes vendor ID](https://pid.codes/1209/))
 `USB_DESCRIPTORS_PRODUCT_ID` | 0xfa70 ([Relacon product ID from pid.codes](https://pid.codes/1209/FA70/))
-`USB_DESCRIPTORS_STRING_SERIAL_NUM` | "A123456"
+`USB_DESCRIPTORS_STRING_SERIAL_NUM` | "A12345"
 
 To override any of these, simply assign one or more of them on the make command line when building the firmware; for example:
 
