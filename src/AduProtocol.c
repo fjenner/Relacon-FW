@@ -247,7 +247,7 @@ static bool HandlerReadSinglePort(const char *args)
             if (len == 2)
             {
                 char *endptr;
-                unsigned long line = strtoul(&args[1], &endptr, 0);
+                unsigned long line = strtoul(&args[1], &endptr, 10);
 
                 // Check that the conversion was valid and in range
                 if (*endptr == '\0' && line < INPUT_PORT_NUM_PINS)
@@ -356,7 +356,7 @@ static bool HandlerSetRelay(const char *args)
     if (strlen(args) == 1)
     {
         char *endptr;
-        unsigned long relay = strtoul(args, &endptr, 0);
+        unsigned long relay = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && relay < NUM_RELAYS)
         {
@@ -389,7 +389,7 @@ static bool HandlerClearRelay(const char *args)
     if (strlen(args) == 1)
     {
         char *endptr;
-        unsigned long relay = strtoul(args, &endptr, 0);
+        unsigned long relay = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && relay < NUM_RELAYS)
         {
@@ -425,7 +425,7 @@ static bool HandlerWriteRelayPort(const char *args)
     if (strlen(args) <= 3)
     {
         char *endptr;
-        unsigned long portValue = strtoul(args, &endptr, 0);
+        unsigned long portValue = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && portValue <= UINT8_MAX)
         {
@@ -457,7 +457,7 @@ static bool HandlerReadSingleRelay(const char *args)
     if (strlen(args) == 1)
     {
         char *endptr;
-        unsigned long relay = strtoul(args, &endptr, 0);
+        unsigned long relay = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && relay < NUM_RELAYS)
         {
@@ -516,7 +516,7 @@ static bool HandlerReadEventCounter(const char *args)
     if (strlen(args) == 1)
     {
         char *endptr;
-        unsigned long index = strtoul(args, &endptr, 0);
+        unsigned long index = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && index < EVENT_COUNTER_NUM_COUNTERS)
         {
@@ -549,7 +549,7 @@ static bool HandlerReadAndResetEventCounter(const char *args)
     if (strlen(args) == 1)
     {
         char *endptr;
-        unsigned long index = strtoul(args, &endptr, 0);
+        unsigned long index = strtoul(args, &endptr, 10);
 
         if (*endptr == '\0' && index < EVENT_COUNTER_NUM_COUNTERS)
         {
@@ -598,7 +598,7 @@ static bool HandlerDebounceSetting(const char *args)
     {
         // Set the debounce time based on the command argument
         char *endptr;
-        unsigned long setting = strtoul(args, &endptr, 0);
+        unsigned long setting = strtoul(args, &endptr, 10);
 
         if (setting < DEBOUNCE_SETTING_NUM_SETTINGS)
         {
@@ -646,7 +646,7 @@ static bool HandlerWatchdogSetting(const char *args)
     {
         // Update the current watchdog setting
         char *endptr;
-        unsigned long setting = strtoul(args, &endptr, 0);
+        unsigned long setting = strtoul(args, &endptr, 10);
 
         if (setting < WATCHDOG_SETTING_NUM_SETTINGS)
         {
